@@ -50,7 +50,7 @@ pub enum Expr {
         rhs: Boxpr,
     },
     FnCall {
-        ident: String,
+        fun: Boxpr,
         args: Vec<Spanned<Expr>>,
     },
 }

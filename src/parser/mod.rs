@@ -45,6 +45,11 @@ impl<'input> Parser<'input> {
         }
     }
 
+    /// Proceed by one token
+    pub fn advance(&mut self) {
+        self.tokens.next();
+    }
+
     /// Get next token, returning an `UnexpectedEndOfInput` if the lexer returns `None`
     pub fn next_token(&mut self) -> SyntaxResult<Token> {
         self.tokens.next().ok_or_else(|| {

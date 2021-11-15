@@ -51,7 +51,7 @@ impl fmt::Display for Expr {
                 Expr::Literal(l) => l.to_string(),
                 Expr::UnaryOp { op, expr } => format!("({} {})", op, expr),
                 Expr::BinaryOp { op, lhs, rhs } => format!("({} {} {})", op, lhs, rhs),
-                Expr::FnCall { ident, args } => format!("({} {})", ident, join_things(args)),
+                Expr::FnCall { fun, args } => format!("({} {})", fun, join_things(args)),
             }
         )
     }

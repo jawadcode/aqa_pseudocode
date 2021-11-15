@@ -69,14 +69,12 @@ impl<'input> Parser<'input> {
             | lit @ True
             | lit @ False
             | lit @ Null => self.parse_lit(lit)?,
+
             op @ Minus | op @ Not => self.parse_prefix_op(op)?,
 
-            // Ident => self.parse_ident()?,
-            // Fn => self.parse_closure()?,
-            // If => self.parse_if_expr()?,
-            // Match => self.parse_match_expr()?,
-            // Do => self.parse_block_expr()?,
-            // LeftParen => self.parse_grouping()?,
+            Ident => self.parse_ident()?,
+            LeftParen => self.parse_grouping()?,
+
             _ => {
                 let token = self.next_token()?;
                 return Err(SyntaxError::UnexpectedToken {
@@ -85,6 +83,31 @@ impl<'input> Parser<'input> {
                 });
             }
         };
+
+        if self.at(TokenKind::LeftParen) {
+            self.advance();
+            
+            let mut args = vec![];
+            while !self.at(TokenKind::RightParen) {
+                let arg = self.expr()?;
+                args.push(arg);
+
+                if self.at(TokenKind::Comma) {
+                    self.advance();
+                } else {
+                    break;
+                }
+            }
+
+            let rparen = self.consume_next(TokenKind::RightParen)?;
+            lhs = Spanned {
+                span: (lhs.span.start..rparen.span.end).into(),
+                node: Expr::FnCall {
+                    fun: Box::new(lhs),
+                    args,
+                },
+            };
+        }
 
         loop {
             let op = match self.peek() {
@@ -194,6 +217,24 @@ impl<'input> Parser<'input> {
         })
     }
 
+    fn parse_ident(&mut self) -> ParseResult<Expr> {
+        // Can unwrap because we already know there is a token
+        let token = self.next_token().unwrap();
+        let text = self.text(token);
+
+        Ok(Spanned {
+            span: token.span,
+            node: Expr::Ident(text.to_string()),
+        })
+    }
+
+    fn parse_grouping(&mut self) -> ParseResult<Expr> {
+        self.advance();
+        let expr = self.expr()?;
+        self.consume(TokenKind::RightParen)?;
+        Ok(expr)
+    }
+
     pub fn expr(&mut self) -> ParseResult<Expr> {
         self.parse_expr(0)
     }
@@ -213,10 +254,7 @@ mod tests {
             println!("Sample: '{}'", $sample);
             match Parser::new(test).expr() {
                 Ok(expr) => {
-                    println!(
-                        "\nGot:    {}\nWanted: {}\n",
-                        expr, $sexpr
-                    );
+                    println!("\nGot:    {}\nWanted: {}\n", expr, $sexpr);
                     assert_eq!(expr.to_string(), $sexpr);
                 }
                 Err(err) => {
@@ -233,5 +271,46 @@ mod tests {
             "123 - 4.32e24 / 7893 + 3 * -789",
             "(+ (- 123 (/ 4320000000000000000000000 7893)) (* 3 (- 789)))"
         );
+    }
+
+    #[test]
+    fn parse_ident() {
+        assert_expr!(
+            r#"hello + world == "hello world""#,
+            r#"(== (+ hello world) "hello world")"#
+        );
+    }
+
+    #[test]
+    fn parse_grouping() {
+        assert_expr!(
+            "123 - 4.32e24 / (7893 + 3) * -789",
+            "(- 123 (* (/ 4320000000000000000000000 (+ 7893 3)) (- 789)))"
+        );
+    }
+
+    #[test]
+    fn parse_fncall() {
+        assert_expr!(
+            r#"(((((((((((say_hello)))))))))))("Jawad", "[REDACTED]") == "Hello Jawad [REDACTED]!""#,
+            r#"(== (say_hello "Jawad" "[REDACTED]") "Hello Jawad [REDACTED]!")"#
+        );
+    }
+
+    #[test]
+    fn parser_repl() {
+        use std::io;
+        loop {
+            let mut input = String::new();
+            io::stdin().read_line(&mut input).unwrap();
+            match Parser::new(&input).expr() {
+                Ok(expr) => {
+                    println!("AST: {}", expr);
+                }
+                Err(err) => {
+                    eprintln!("{:#?}", err);
+                }
+            }
+        }
     }
 }
