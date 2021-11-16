@@ -80,10 +80,6 @@ impl fmt::Display for Token {
 
 impl fmt::Debug for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{:?} [{}:{}]",
-            self.kind, self.span.start, self.span.end
-        )
+        write!(f, "{:?} [{}:{}]", self.kind, self.span.start, self.span.end)
     }
 }

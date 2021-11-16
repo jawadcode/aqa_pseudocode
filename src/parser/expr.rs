@@ -1,12 +1,13 @@
 use crate::{
-    ast::{Boxpr, Expr, Literal},
+    ast::{Boxpr, Expr, Literal, SpanExpr},
     lexer::token::TokenKind,
 };
 
 use super::{ParseResult, Parser, Spanned, SyntaxError, SyntaxResult};
 
-const EXPR_TERMINATORS: [TokenKind; 6] = [
+const EXPR_TERMINATORS: [TokenKind; 7] = [
     TokenKind::RightParen,
+    TokenKind::RightSquare,
     TokenKind::Newline,
     TokenKind::Comma,
     TokenKind::Then,
@@ -69,6 +70,7 @@ impl<'input> Parser<'input> {
             | lit @ True
             | lit @ False
             | lit @ Null => self.parse_lit(lit)?,
+            LeftSquare => self.parse_list()?,
 
             op @ Minus | op @ Not => self.parse_prefix_op(op)?,
 
@@ -84,29 +86,17 @@ impl<'input> Parser<'input> {
             }
         };
 
-        if self.at(TokenKind::LeftParen) {
+        if self.at(TokenKind::LeftSquare) {
             self.advance();
-            
-            let mut args = vec![];
-            while !self.at(TokenKind::RightParen) {
-                let arg = self.expr()?;
-                args.push(arg);
-
-                if self.at(TokenKind::Comma) {
-                    self.advance();
-                } else {
-                    break;
-                }
-            }
-
-            let rparen = self.consume_next(TokenKind::RightParen)?;
+            let idx = self.expr()?;
+            let rsquare = self.consume_next(TokenKind::RightSquare)?;
             lhs = Spanned {
-                span: (lhs.span.start..rparen.span.end).into(),
-                node: Expr::FnCall {
-                    fun: Box::new(lhs),
-                    args,
+                span: (lhs.span.start..rsquare.span.end).into(),
+                node: Expr::Index {
+                    list: Box::new(lhs),
+                    index: Box::new(idx),
                 },
-            };
+            }
         }
 
         loop {
@@ -124,7 +114,7 @@ impl<'input> Parser<'input> {
                 | op @ GreaterOrEq
                 | op @ NotEq
                 | op @ Equals => op,
-                RightParen | Newline | Comma | Then | Else | Eof => break,
+                RightParen | RightSquare | Newline | Comma | Then | Else | Eof => break,
 
                 _ => {
                     let token = self.next_token()?;
@@ -200,6 +190,19 @@ impl<'input> Parser<'input> {
         })
     }
 
+    fn parse_list(&mut self) -> ParseResult<Expr> {
+        // We can .unwrap() because the next token is
+        // guaranteed to be `LeftSquare`
+        let lsquare = self.next_token().unwrap();
+        let args = self.parse_csv(TokenKind::RightSquare)?;
+        let rsquare = self.consume_next(TokenKind::RightSquare)?;
+
+        Ok(Spanned {
+            span: (lsquare.span.start..rsquare.span.end).into(),
+            node: Expr::List(args),
+        })
+    }
+
     fn parse_prefix_op(&mut self, op: TokenKind) -> ParseResult<Expr> {
         let token = self.next_token()?;
         // Get right binding power of the operator,
@@ -222,9 +225,23 @@ impl<'input> Parser<'input> {
         let token = self.next_token().unwrap();
         let text = self.text(token);
 
-        Ok(Spanned {
-            span: token.span,
-            node: Expr::Ident(text.to_string()),
+        Ok(if self.at(TokenKind::LeftParen) {
+            self.advance();
+            let args = self.parse_csv(TokenKind::RightParen)?;
+            let rparen = self.consume_next(TokenKind::RightParen)?;
+
+            Spanned {
+                span: (token.span.start..rparen.span.end).into(),
+                node: Expr::FnCall {
+                    ident: text.to_string(),
+                    args,
+                },
+            }
+        } else {
+            Spanned {
+                span: token.span,
+                node: Expr::Ident(text.to_string()),
+            }
         })
     }
 
@@ -233,6 +250,22 @@ impl<'input> Parser<'input> {
         let expr = self.expr()?;
         self.consume(TokenKind::RightParen)?;
         Ok(expr)
+    }
+
+    fn parse_csv(&mut self, terminator: TokenKind) -> SyntaxResult<Vec<SpanExpr>> {
+        let mut args = vec![];
+        while !self.at(terminator) {
+            let arg = self.expr()?;
+            args.push(arg);
+
+            if self.at(TokenKind::Comma) {
+                self.advance();
+            } else {
+                break;
+            }
+        }
+
+        Ok(args)
     }
 
     pub fn expr(&mut self) -> ParseResult<Expr> {
@@ -274,6 +307,14 @@ mod tests {
     }
 
     #[test]
+    fn parse_list() {
+        assert_expr!(
+            "[0, 1, 2 * 8 + 3, 89 * -79]",
+            "(list! 0 1 (+ (* 2 8) 3) (* 89 (- 79)))"
+        );
+    }
+
+    #[test]
     fn parse_ident() {
         assert_expr!(
             r#"hello + world == "hello world""#,
@@ -292,8 +333,16 @@ mod tests {
     #[test]
     fn parse_fncall() {
         assert_expr!(
-            r#"(((((((((((say_hello)))))))))))("Jawad", "[REDACTED]") == "Hello Jawad [REDACTED]!""#,
+            r#"say_hello("Jawad", "[REDACTED]") == "Hello Jawad [REDACTED]!""#,
             r#"(== (say_hello "Jawad" "[REDACTED]") "Hello Jawad [REDACTED]!")"#
+        );
+    }
+
+    #[test]
+    fn parse_indexing() {
+        assert_expr!(
+            "create_range(0, 123)[64 + 3] == 67",
+            "(== (index! (create_range 0 123) (+ 64 3)) 67)"
         );
     }
 

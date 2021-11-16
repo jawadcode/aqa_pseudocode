@@ -1,6 +1,11 @@
 pub mod expr;
+pub mod stmt;
 
-use crate::lexer::{Lexer, token::TokenKind, types::{Span, Token}};
+use crate::lexer::{
+    token::TokenKind,
+    types::{Span, Token},
+    Lexer,
+};
 
 use std::{fmt, iter::Peekable};
 

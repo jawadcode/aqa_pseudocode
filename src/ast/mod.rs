@@ -4,7 +4,7 @@ use crate::parser::Spanned;
 
 pub mod impls;
 
-type SpanExpr = Spanned<Expr>;
+pub type SpanExpr = Spanned<Expr>;
 pub type Boxpr = Box<SpanExpr>;
 type Stmts = Vec<Spanned<Stmt>>;
 
@@ -40,6 +40,7 @@ pub enum Stmt {
 pub enum Expr {
     Ident(String),
     Literal(Literal),
+    List(Vec<SpanExpr>),
     UnaryOp {
         op: Op,
         expr: Boxpr,
@@ -50,8 +51,12 @@ pub enum Expr {
         rhs: Boxpr,
     },
     FnCall {
-        fun: Boxpr,
+        ident: String,
         args: Vec<Spanned<Expr>>,
+    },
+    Index {
+        list: Boxpr,
+        index: Boxpr,
     },
 }
 

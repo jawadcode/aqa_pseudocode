@@ -49,9 +49,11 @@ impl fmt::Display for Expr {
             match self {
                 Expr::Ident(i) => i.to_string(),
                 Expr::Literal(l) => l.to_string(),
+                Expr::List(l) => format!("(list! {})", join_things(l)),
                 Expr::UnaryOp { op, expr } => format!("({} {})", op, expr),
                 Expr::BinaryOp { op, lhs, rhs } => format!("({} {} {})", op, lhs, rhs),
-                Expr::FnCall { fun, args } => format!("({} {})", fun, join_things(args)),
+                Expr::FnCall { ident, args } => format!("({} {})", ident, join_things(args)),
+                Expr::Index { list, index } => format!("(index! {} {})", list, index),
             }
         )
     }
