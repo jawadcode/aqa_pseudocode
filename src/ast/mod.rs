@@ -28,6 +28,12 @@ pub enum Stmt {
         ident: String,
         args: Vec<SpanExpr>,
     },
+    If {
+        cond: SpanExpr,
+        body: Stmts,
+        else_ifs: Vec<(SpanExpr, Stmts)>,
+        else_: Option<Stmts>,
+    },
     While {
         cond: SpanExpr,
         body: Stmts,

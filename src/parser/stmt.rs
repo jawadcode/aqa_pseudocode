@@ -1,9 +1,11 @@
 use crate::{
-    ast::{Stmt, Stmts},
+    ast::{SpanExpr, Stmt, Stmts},
     lexer::{token::TokenKind, types::Token},
 };
 
 use super::{ParseResult, Parser, Spanned, SyntaxError, SyntaxResult};
+
+const IF_TERMINATOR: [TokenKind; 3] = [TokenKind::ElseIf, TokenKind::Else, TokenKind::Endif];
 
 impl<'input> Parser<'input> {
     pub fn stmt(&mut self) -> ParseResult<Stmt> {
@@ -11,6 +13,7 @@ impl<'input> Parser<'input> {
             TokenKind::Ident => self.parse_ident_stmt(),
             TokenKind::Output => self.parse_output(),
             TokenKind::Subroutine => self.parse_subroutine(),
+            TokenKind::If => self.parse_if(),
             TokenKind::While => self.parse_while(),
             TokenKind::Repeat => self.parse_repeat_until(),
             TokenKind::For => self.parse_for(),
@@ -18,7 +21,7 @@ impl<'input> Parser<'input> {
                 self.advance();
                 self.stmt()
             }
-            __ => {
+            _ => {
                 let token = self.next_token()?;
                 Err(SyntaxError::UnexpectedToken {
                     expected: "statement".to_string(),
@@ -63,6 +66,7 @@ impl<'input> Parser<'input> {
             TokenKind::LeftSquare => self.parse_list_assign(token, text),
             _ => {
                 let token = self.next_token()?;
+                dbg!(self.text(token));
                 Err(SyntaxError::UnexpectedToken {
                     expected: "'←', '[' or '('".to_string(),
                     token,
@@ -87,7 +91,7 @@ impl<'input> Parser<'input> {
                 }
                 idxs
             }
-            __ => {
+            _ => {
                 let token = self.next_token()?;
                 return Err(SyntaxError::UnexpectedToken {
                     expected: "'←' or '['".to_string(),
@@ -157,6 +161,55 @@ impl<'input> Parser<'input> {
                 body,
             },
         })
+    }
+
+    fn parse_if(&mut self) -> ParseResult<Stmt> {
+        let token = self.next_token()?;
+        let cond = self.expr()?;
+        self.consume(TokenKind::Then)?;
+        self.consume(TokenKind::Newline)?;
+        let body = self.parse_if_body()?;
+        let else_ifs = self.parse_else_if()?;
+        let else_ = if self.at(TokenKind::Else) {
+            self.advance();
+            self.consume(TokenKind::Newline)?;
+            Some(self.parse_if_body()?)
+        } else {
+            None
+        };
+        let end = self.consume_next(TokenKind::Endif)?;
+
+        Ok(Spanned {
+            span: (token.span.start..end.span.end).into(),
+            node: Stmt::If {
+                cond,
+                body,
+                else_ifs,
+                else_,
+            },
+        })
+    }
+
+    fn parse_else_if(&mut self) -> SyntaxResult<Vec<(SpanExpr, Stmts)>> {
+        let mut else_ifs = vec![];
+        while self.at(TokenKind::ElseIf) {
+            self.advance();
+            let cond = self.expr()?;
+            self.consume(TokenKind::Then)?;
+            self.consume(TokenKind::Newline)?;
+            let body = self.parse_if_body()?;
+            else_ifs.push((cond, body));
+        }
+
+        Ok(else_ifs)
+    }
+
+    fn parse_if_body(&mut self) -> SyntaxResult<Stmts> {
+        let mut body = vec![];
+        while !self.at_any(&IF_TERMINATOR) {
+            body.push(self.stmt()?);
+        }
+        Ok(body)
     }
 
     fn parse_while(&mut self) -> ParseResult<Stmt> {
@@ -274,6 +327,24 @@ ENDSUBROUTINE
     }
 
     #[test]
+    fn parse_if() {
+        assert_stmt!(
+            "
+IF thing1 < thing2 THEN
+    do_thing(thing1)
+ELSE IF thing1 > thing2 THEN
+    do_thing(thing2)
+ELSE IF other_condition THEN
+    do_other_thing()
+ELSE
+    do_nothing()
+ENDIF
+",
+            "(if! (< thing1 thing2) ((do_thing thing1)) :else_ifs (((> thing1 thing2) (do_thing thing2)) (other_condition (do_other_thing ))) :else ((do_nothing )))"
+        );
+    }
+
+    #[test]
     fn parse_while() {
         assert_stmt!(
             "
@@ -297,7 +368,7 @@ REPEAT
     thing()
 UNTIL NOT check()
 ",
-            "(repeat! ((thing )) (not (check )))"
+            "(repeat! ((thing )) :until (not (check )))"
         );
     }
 

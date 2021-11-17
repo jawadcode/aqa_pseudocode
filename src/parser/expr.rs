@@ -80,6 +80,7 @@ impl<'input> Parser<'input> {
 
             _ => {
                 let token = self.next_token()?;
+                dbg!(self.text(token));
                 return Err(SyntaxError::UnexpectedToken {
                     expected: "expression".to_string(),
                     token,

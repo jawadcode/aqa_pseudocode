@@ -33,9 +33,25 @@ impl fmt::Display for Stmt {
                     join_things(body)
                 ),
                 Stmt::SubCall { ident, args } => format!("({} {})", ident, join_things(args)),
+                Stmt::If {
+                    cond,
+                    body,
+                    else_ifs,
+                    else_,
+                } => format!(
+                    "(if! {} ({}){}{})",
+                    cond,
+                    join_things(body),
+                    fmt_else_ifs(else_ifs),
+                    if let Some(e) = else_ {
+                        format!(" :else ({})", join_things(e))
+                    } else {
+                        "".to_string()
+                    }
+                ),
                 Stmt::While { cond, body } => format!("(while! {} {})", cond, join_things(body)),
                 Stmt::RepeatUntil { body, until_cond } =>
-                    format!("(repeat! ({}) {})", join_things(body), until_cond),
+                    format!("(repeat! ({}) :until {})", join_things(body), until_cond),
                 Stmt::For {
                     counter,
                     range,
@@ -49,6 +65,21 @@ impl fmt::Display for Stmt {
                 ),
             }
         )
+    }
+}
+
+fn fmt_else_ifs(else_ifs: &[(SpanExpr, Stmts)]) -> String {
+    if !else_ifs.is_empty() {
+        format!(
+            " :else_ifs ({})",
+            else_ifs
+                .iter()
+                .map(|(cond, body)| format!("({} {})", cond, join_things(body)))
+                .collect::<Vec<_>>()
+                .join(" ")
+        )
+    } else {
+        "".to_string()
     }
 }
 
