@@ -35,13 +35,13 @@ impl fmt::Display for Stmt {
                 Stmt::SubCall { ident, args } => format!("({} {})", ident, join_things(args)),
                 Stmt::While { cond, body } => format!("(while! {} {})", cond, join_things(body)),
                 Stmt::RepeatUntil { body, until_cond } =>
-                    format!("(repeat! {} {})", join_things(body), until_cond),
+                    format!("(repeat! ({}) {})", join_things(body), until_cond),
                 Stmt::For {
                     counter,
                     range,
                     body,
                 } => format!(
-                    "(for! {} (.. {} {}) {})",
+                    "(for! {} (.. {} {}) ({}))",
                     counter,
                     range.start,
                     range.end,

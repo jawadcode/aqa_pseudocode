@@ -46,6 +46,20 @@ impl<'input> Parser<'input> {
                     },
                 })
             }
+            TokenKind::LeftParen => {
+                self.advance();
+                let args = self.parse_csv(TokenKind::RightParen)?;
+                let rparen = self.consume_next(TokenKind::RightParen)?;
+                self.consume(TokenKind::Newline)?;
+
+                Ok(Spanned {
+                    span: (token.span.start..rparen.span.end).into(),
+                    node: Stmt::SubCall {
+                        ident: text.to_string(),
+                        args,
+                    },
+                })
+            }
             TokenKind::LeftSquare => self.parse_list_assign(token, text),
             _ => {
                 let token = self.next_token()?;
@@ -272,6 +286,30 @@ SUBROUTINE main()
 ENDSUBROUTINE
 ",
             "(define! main [] ((set! number (STRING_TO_INT (userinput!))) (while! (and (< number 0) (> number 10)) (set! number (STRING_TO_INT (userinput!)))) (output! number)))"
+        );
+    }
+
+    #[test]
+    fn parse_repeat_until() {
+        assert_stmt!(
+            "
+REPEAT
+    thing()
+UNTIL NOT check()
+",
+            "(repeat! ((thing )) (not (check )))"
+        );
+    }
+
+    #[test]
+    fn parse_for() {
+        assert_stmt!(
+            "
+FOR i ← 0 TO 10
+    OUTPUT i
+ENDFOR
+",
+            "(for! i (.. 0 10) ((output! i)))"
         );
     }
 }

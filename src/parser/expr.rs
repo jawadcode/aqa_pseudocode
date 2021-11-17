@@ -115,7 +115,7 @@ impl<'input> Parser<'input> {
                 | op @ GreaterOrEq
                 | op @ NotEq
                 | op @ Equals => op,
-                RightParen | RightSquare | Newline | Comma | Then | Else | Eof => break,
+                RightParen | RightSquare | Newline | Comma | Then | Else | Eof | To => break,
 
                 _ => {
                     let token = self.next_token()?;
