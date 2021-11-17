@@ -1,19 +1,19 @@
 use crate::{
-    ast::{Boxpr, Expr, Literal, SpanExpr},
+    ast::{Expr, Literal, SpanExpr},
     lexer::token::TokenKind,
 };
 
 use super::{ParseResult, Parser, Spanned, SyntaxError, SyntaxResult};
 
-const EXPR_TERMINATORS: [TokenKind; 7] = [
-    TokenKind::RightParen,
-    TokenKind::RightSquare,
-    TokenKind::Newline,
-    TokenKind::Comma,
-    TokenKind::Then,
-    TokenKind::Else,
-    TokenKind::Eof,
-];
+// const EXPR_TERMINATORS: [TokenKind; 7] = [
+//     TokenKind::RightParen,
+//     TokenKind::RightSquare,
+//     TokenKind::Newline,
+//     TokenKind::Comma,
+//     TokenKind::Then,
+//     TokenKind::Else,
+//     TokenKind::Eof,
+// ];
 
 /// Trait with methods that return the binding power(s) for the operator it is called on
 trait Operator {
@@ -70,6 +70,7 @@ impl<'input> Parser<'input> {
             | lit @ True
             | lit @ False
             | lit @ Null => self.parse_lit(lit)?,
+            Userinput => self.parse_userinput()?,
             LeftSquare => self.parse_list()?,
 
             op @ Minus | op @ Not => self.parse_prefix_op(op)?,
@@ -190,6 +191,15 @@ impl<'input> Parser<'input> {
         })
     }
 
+    fn parse_userinput(&mut self) -> ParseResult<Expr> {
+        // Can be unwrapped because it's checked before calling
+        let token = self.next_token().unwrap();
+        Ok(Spanned {
+            span: token.span,
+            node: Expr::Userinput,
+        })
+    }
+
     fn parse_list(&mut self) -> ParseResult<Expr> {
         // We can .unwrap() because the next token is
         // guaranteed to be `LeftSquare`
@@ -252,7 +262,7 @@ impl<'input> Parser<'input> {
         Ok(expr)
     }
 
-    fn parse_csv(&mut self, terminator: TokenKind) -> SyntaxResult<Vec<SpanExpr>> {
+    pub(crate) fn parse_csv(&mut self, terminator: TokenKind) -> SyntaxResult<Vec<SpanExpr>> {
         let mut args = vec![];
         while !self.at(terminator) {
             let arg = self.expr()?;
@@ -270,10 +280,6 @@ impl<'input> Parser<'input> {
 
     pub fn expr(&mut self) -> ParseResult<Expr> {
         self.parse_expr(0)
-    }
-
-    pub(crate) fn boxed_expr(&mut self) -> SyntaxResult<Boxpr> {
-        self.parse_expr(0).map(Box::new)
     }
 }
 
@@ -304,6 +310,10 @@ mod tests {
             "123 - 4.32e24 / 7893 + 3 * -789",
             "(+ (- 123 (/ 4320000000000000000000000 7893)) (* 3 (- 789)))"
         );
+    }
+
+    fn parse_userinput() {
+        assert_expr!("(((USERINPUT)))", "(userinput!)");
     }
 
     #[test]
@@ -344,22 +354,5 @@ mod tests {
             "create_range(0, 123)[64 + 3] == 67",
             "(== (index! (create_range 0 123) (+ 64 3)) 67)"
         );
-    }
-
-    #[test]
-    fn parser_repl() {
-        use std::io;
-        loop {
-            let mut input = String::new();
-            io::stdin().read_line(&mut input).unwrap();
-            match Parser::new(&input).expr() {
-                Ok(expr) => {
-                    println!("AST: {}", expr);
-                }
-                Err(err) => {
-                    eprintln!("{:#?}", err);
-                }
-            }
-        }
     }
 }

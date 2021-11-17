@@ -34,7 +34,7 @@ pub enum SyntaxError {
     End,
 }
 
-type SyntaxResult<T> = Result<T, SyntaxError>;
+pub type SyntaxResult<T> = Result<T, SyntaxError>;
 pub type ParseResult<T> = Result<Spanned<T>, SyntaxError>;
 
 pub struct Parser<'input> {

@@ -4,8 +4,6 @@
 
 - `SUBROUTINE`
 - `ENDSUBROUTINE`
-- `FUNCTION`
-- `ENDFUNCTION`
 - `RETURN`
 - `IF`
 - `THEN`
@@ -15,11 +13,13 @@
 - `WHILE`
 - `ENDWHILE`
 - `FOR`
+- `TO`
 - `ENDFOR`
 - `REPEAT`
 - `UNTIL`
 - `CONSTANT`
 - `OUTPUT`
+- `USERINPUT`
 
 ### Operators:
 

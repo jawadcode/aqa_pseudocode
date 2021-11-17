@@ -6,12 +6,18 @@ pub mod impls;
 
 pub type SpanExpr = Spanned<Expr>;
 pub type Boxpr = Box<SpanExpr>;
-type Stmts = Vec<Spanned<Stmt>>;
+pub type Stmts = Vec<Spanned<Stmt>>;
 
 pub enum Stmt {
+    Output(SpanExpr),
     Assign {
         ident: String,
-        expr: Expr,
+        value: SpanExpr,
+    },
+    ListAssign {
+        list_ident: String,
+        indices: Vec<SpanExpr>,
+        value: SpanExpr,
     },
     SubDef {
         ident: String,
@@ -41,6 +47,7 @@ pub enum Expr {
     Ident(String),
     Literal(Literal),
     List(Vec<SpanExpr>),
+    Userinput,
     UnaryOp {
         op: Op,
         expr: Boxpr,

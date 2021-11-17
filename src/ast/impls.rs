@@ -10,7 +10,18 @@ impl fmt::Display for Stmt {
             f,
             "{}",
             match self {
-                Stmt::Assign { ident, expr } => format!("(set! {} {})", ident, expr),
+                Stmt::Output(value) => format!("(output! {})", value),
+                Stmt::Assign { ident, value } => format!("(set! {} {})", ident, value),
+                Stmt::ListAssign {
+                    list_ident,
+                    indices,
+                    value,
+                } => format!(
+                    "(list_set! {} [{}] {})",
+                    list_ident,
+                    join_things(indices),
+                    value
+                ),
                 Stmt::SubDef {
                     ident,
                     params,
@@ -50,6 +61,7 @@ impl fmt::Display for Expr {
                 Expr::Ident(i) => i.to_string(),
                 Expr::Literal(l) => l.to_string(),
                 Expr::List(l) => format!("(list! {})", join_things(l)),
+                Expr::Userinput => "(userinput!)".to_string(),
                 Expr::UnaryOp { op, expr } => format!("({} {})", op, expr),
                 Expr::BinaryOp { op, lhs, rhs } => format!("({} {} {})", op, lhs, rhs),
                 Expr::FnCall { ident, args } => format!("({} {})", ident, join_things(args)),

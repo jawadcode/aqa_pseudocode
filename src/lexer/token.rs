@@ -10,12 +10,12 @@ pub enum LogosToken {
     #[token("ENDSUBROUTINE")]
     #[token("endsubroutine")]
     EndSub,
-    #[token("FUNCTION")]
-    #[token("function")]
-    Function,
-    #[token("ENDFUNCTION")]
-    #[token("endfunction")]
-    EndFun,
+    // #[token("FUNCTION")]
+    // #[token("function")]
+    // Function,
+    // #[token("ENDFUNCTION")]
+    // #[token("endfunction")]
+    // EndFun,
     #[token("RETURN")]
     #[token("return")]
     Return,
@@ -43,6 +43,9 @@ pub enum LogosToken {
     #[token("FOR")]
     #[token("for")]
     For,
+    #[token("TO")]
+    #[token("to")]
+    To,
     #[token("ENDFOR")]
     #[token("endfor")]
     EndFor,
@@ -56,7 +59,11 @@ pub enum LogosToken {
     #[token("constant")]
     Constant,
     #[token("OUTPUT")]
+    #[token("output")]
     Output,
+    #[token("USERINPUT")]
+    #[token("userinput")]
+    Userinput,
     /* ARITHMETIC OPERATORS */
     #[token("+")]
     Plus,
@@ -147,8 +154,8 @@ pub enum TokenKind {
     /* KEYWORDS */
     Subroutine,
     EndSub,
-    Function,
-    EndFun,
+    // Function,
+    // EndFun,
     Return,
     If,
     Then,
@@ -158,11 +165,13 @@ pub enum TokenKind {
     While,
     EndWhile,
     For,
+    To,
     EndFor,
     Repeat,
     Until,
     Constant,
     Output,
+    Userinput,
     /* ARITHMETIC OPERATORS */
     Add,
     Minus,
@@ -209,8 +218,8 @@ impl From<LogosToken> for TokenKind {
         match other {
             Subroutine => Self::Subroutine,
             EndSub => Self::EndSub,
-            Function => Self::Function,
-            EndFun => Self::EndFun,
+            // Function => Self::Function,
+            // EndFun => Self::EndFun,
             Return => Self::Return,
             If => Self::If,
             Then => Self::Then,
@@ -220,11 +229,13 @@ impl From<LogosToken> for TokenKind {
             While => Self::While,
             EndWhile => Self::EndWhile,
             For => Self::For,
+            To => Self::To,
             EndFor => Self::EndFor,
             Repeat => Self::Repeat,
             Until => Self::Until,
             Constant => Self::Constant,
             Output => Self::Output,
+            Userinput => Self::Userinput,
             Equals => Self::Equals,
             NotEq => Self::NotEq,
             LessThan => Self::LessThan,
@@ -269,8 +280,8 @@ impl fmt::Display for TokenKind {
             match self {
                 Subroutine => "'SUBROUTINE'",
                 EndSub => "'ENDSUB'",
-                Function => "'FUNCTION'",
-                EndFun => "'ENDFUNCTION'",
+                // Function => "'FUNCTION'",
+                // EndFun => "'ENDFUNCTION'",
                 Return => "'RETURN'",
                 If => "'IF'",
                 Then => "'THEN'",
@@ -280,11 +291,13 @@ impl fmt::Display for TokenKind {
                 While => "'WHILE'",
                 EndWhile => "'ENDWHILE'",
                 For => "'FOR'",
+                To => "'TO'",
                 EndFor => "'ENDFOR'",
                 Repeat => "'REPEAT'",
                 Until => "'UNTIL'",
                 Constant => "'CONSTANT'",
                 Output => "'OUTPUT'",
+                Userinput => "'USERINPUT'",
                 Add => "'+'",
                 Minus => "'-'",
                 Multiply => "'*'",
