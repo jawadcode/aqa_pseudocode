@@ -32,6 +32,7 @@ impl fmt::Display for Stmt {
                     join_things(params),
                     join_things(body)
                 ),
+                Stmt::Return { expr } => format!("(return! {})", expr),
                 Stmt::SubCall { ident, args } => format!("({} {})", ident, join_things(args)),
                 Stmt::If {
                     cond,

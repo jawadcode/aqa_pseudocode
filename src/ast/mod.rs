@@ -5,9 +5,11 @@ use crate::parser::Spanned;
 pub mod impls;
 
 pub type SpanExpr = Spanned<Expr>;
+pub type SpanStmt = Spanned<Stmt>;
 pub type Boxpr = Box<SpanExpr>;
 pub type Stmts = Vec<Spanned<Stmt>>;
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum Stmt {
     Output(SpanExpr),
     Assign {
@@ -23,6 +25,9 @@ pub enum Stmt {
         ident: String,
         params: Vec<String>,
         body: Stmts,
+    },
+    Return {
+        expr: SpanExpr,
     },
     SubCall {
         ident: String,
@@ -49,6 +54,7 @@ pub enum Stmt {
     },
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     Ident(String),
     Literal(Literal),
@@ -74,6 +80,7 @@ pub enum Expr {
 }
 
 /// A hardcoded value
+#[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
     String(String),
     Int(i64),
@@ -84,6 +91,7 @@ pub enum Literal {
 
 /// A better way to encode all the operations in the language,
 /// as opposed to just using `TokenKind`s
+#[derive(Debug, Clone, PartialEq)]
 pub enum Op {
     /* ARITHMETIC OPERATORS */
     Add,
