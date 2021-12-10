@@ -1,5 +1,5 @@
 use crate::{
-    ast::{SpanExpr, Stmts},
+    ast::{SpanExpr, SpanStmt},
     visitor::Visitor,
 };
 
@@ -25,7 +25,7 @@ impl<'input> Interpreter<'_> {
         &mut self,
         ident: &str,
         params: &[String],
-        body: &Stmts,
+        body: &[SpanStmt],
     ) -> SpannedRuntimeResult<()> {
         self.env.set_variable(
             ident,

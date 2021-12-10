@@ -21,7 +21,7 @@ use super::{
 impl<'input> Interpreter<'_> {
     pub fn visit_ident(&mut self, span: &Span, ident: &str) -> SpannedValueResult {
         self.env.get_variable(ident).map_err(|e| Spanned {
-            span: span.clone(),
+            span: *span,
             node: e,
         })
     }
@@ -50,7 +50,7 @@ impl<'input> Interpreter<'_> {
             _ => unreachable!(),
         }
         .map_err(|e| Spanned {
-            span: span.clone(),
+            span: *span,
             node: e,
         })
     }

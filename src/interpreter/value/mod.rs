@@ -1,6 +1,6 @@
 pub mod impls;
 
-use std::{fmt, mem::size_of_val};
+use std::fmt;
 
 use crate::ast::Stmts;
 

@@ -35,7 +35,7 @@ impl ops::Add for Value {
     fn add(self, rhs: Self) -> Self::Output {
         match (self, &rhs) {
             (Value::Number(n1), Value::Number(n2)) => Ok(Value::Number(n1 + n2)),
-            (Value::String(s1), Value::String(s2)) => Ok(Value::String(s1 + &s2)),
+            (Value::String(s1), Value::String(s2)) => Ok(Value::String(s1 + s2)),
             (v1, v2) => cannot_perform!(&v1, v2, Op::Add),
         }
     }
