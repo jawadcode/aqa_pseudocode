@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use super::{errors::RuntimeError, value::Value, ValueResult};
 
+#[derive(Debug, Clone)]
 pub struct Env {
     scopes: Vec<HashMap<String, Value>>,
     depth: usize,
@@ -39,11 +40,13 @@ impl Env {
 
     /// Get a variable named `ident` from the current scope, returning `RuntimeError::Undefined` if not found
     pub fn get_variable(&mut self, ident: &str) -> ValueResult {
-        self.scopes[self.depth]
-            .get(ident)
-            .map(Clone::clone)
-            .ok_or(RuntimeError::Undefined {
-                ident: ident.to_string(),
-            })
+        for depth in (0..=self.depth).rev() {
+            if let Some(v) = self.scopes[depth].get(ident) {
+                return Ok(v.clone());
+            }
+        }
+        Err(RuntimeError::Undefined {
+            ident: ident.to_string(),
+        })
     }
 }

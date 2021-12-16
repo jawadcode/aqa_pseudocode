@@ -1,5 +1,5 @@
 use crate::{
-    ast::{SpanExpr, Stmt, Stmts},
+    ast::{Expr, Literal, SpanExpr, Stmt, Stmts},
     lexer::{token::TokenKind, types::Token},
 };
 
@@ -13,6 +13,7 @@ impl<'input> Parser<'input> {
             TokenKind::Ident => self.parse_ident_stmt(),
             TokenKind::Output => self.parse_output(),
             TokenKind::Subroutine => self.parse_subroutine(),
+            TokenKind::Return => self.parse_return(),
             TokenKind::If => self.parse_if(),
             TokenKind::While => self.parse_while(),
             TokenKind::Repeat => self.parse_repeat_until(),
@@ -163,6 +164,29 @@ impl<'input> Parser<'input> {
         })
     }
 
+    fn parse_return(&mut self) -> ParseResult<Stmt> {
+        // Can unwrap because the next token was already checked by `parse_stmt`
+        let ret = self.next_token().unwrap();
+        if self.at(TokenKind::Newline) {
+            return Ok(Spanned {
+                span: ret.span,
+                node: Stmt::Return {
+                    expr: Spanned {
+                        span: ret.span,
+                        node: Expr::Literal(Literal::Null),
+                    },
+                },
+            });
+        }
+
+        let expr = self.expr()?;
+        self.consume(TokenKind::Newline)?;
+        Ok(Spanned {
+            span: (ret.span.start..expr.span.end).into(),
+            node: Stmt::Return { expr },
+        })
+    }
+
     fn parse_if(&mut self) -> ParseResult<Stmt> {
         let token = self.next_token()?;
         let cond = self.expr()?;
@@ -265,7 +289,7 @@ impl<'input> Parser<'input> {
         })
     }
 
-    fn parse_stmts(&mut self, terminator: TokenKind) -> SyntaxResult<Stmts> {
+    pub fn parse_stmts(&mut self, terminator: TokenKind) -> SyntaxResult<Stmts> {
         let mut body = vec![];
         while !self.at(terminator) {
             body.push(self.stmt()?);
@@ -324,6 +348,12 @@ ENDSUBROUTINE
 "#,
             r#"(define! hello [firstname] ((set! surname (userinput!)) (set! name (+ (+ firstname " ") surname)) (output! (+ "Hello " name))))"#
         );
+    }
+
+    #[test]
+    fn parse_return() {
+        assert_stmt!("RETURN 69 * 420\n", "(return! (* 69 420))");
+        assert_stmt!("RETURN\n", "(return! null)");
     }
 
     #[test]

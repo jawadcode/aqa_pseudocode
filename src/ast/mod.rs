@@ -91,7 +91,7 @@ pub enum Literal {
 
 /// A better way to encode all the operations in the language,
 /// as opposed to just using `TokenKind`s
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Op {
     /* ARITHMETIC OPERATORS */
     Add,

@@ -1,10 +1,13 @@
 pub mod expr;
 pub mod stmt;
 
-use crate::lexer::{
-    token::TokenKind,
-    types::{Span, Token},
-    Lexer,
+use crate::{
+    ast::SpanStmt,
+    lexer::{
+        token::TokenKind,
+        types::{Span, Token},
+        Lexer,
+    },
 };
 
 use std::{fmt, iter::Peekable};
@@ -48,6 +51,10 @@ impl<'input> Parser<'input> {
             input,
             tokens: Lexer::new(input).peekable(),
         }
+    }
+
+    pub fn parse(&mut self) -> Vec<SpanStmt> {
+        self.parse_stmts(TokenKind::Eof).unwrap()
     }
 
     /// Proceed by one token

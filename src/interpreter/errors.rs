@@ -2,6 +2,9 @@ use std::fmt;
 
 use crate::{ast::Op, interpreter::Type};
 
+use super::value::Value;
+
+#[derive(Debug)]
 pub enum RuntimeError {
     Undefined {
         ident: String,
@@ -26,6 +29,10 @@ pub enum RuntimeError {
         ident: String,
         expected: usize,
         got: usize,
+    },
+    // Not actually an error
+    Return {
+        value: Value,
     },
 }
 
@@ -54,6 +61,7 @@ impl fmt::Display for RuntimeError {
                 "Subroutine {} expected {} arguments but got {}",
                 ident, expected, got
             ),
+            RuntimeError::Return { value } => unreachable!(),
         }
     }
 }

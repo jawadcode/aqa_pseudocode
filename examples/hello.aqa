@@ -1,0 +1,10 @@
+SUBROUTINE hello(firstname, lastname)
+    fullname <- firstname + " " + lastname
+    OUTPUT "Hello, " + fullname
+ENDSUBROUTINE
+
+OUTPUT "Please enter your first name:"
+first <- USERINPUT
+OUTPUT "Please enter your second name:"
+last  <- USERINPUT
+hello(first, last)

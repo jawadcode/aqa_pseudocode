@@ -6,7 +6,7 @@ use crate::ast::Stmts;
 
 use super::Interpreter;
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Subroutine(Subroutine),
     BuiltinFn(BuiltinFn),
@@ -16,7 +16,7 @@ pub enum Value {
     Null,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Subroutine {
     pub ident: String,
     pub params: Vec<String>,
@@ -62,5 +62,11 @@ impl fmt::Display for Subroutine {
 impl fmt::Display for BuiltinFn {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "<BUILTIN {}({})>", self.ident, self.params.join(", "))
+    }
+}
+
+impl fmt::Debug for BuiltinFn {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self, f)
     }
 }

@@ -2,7 +2,7 @@ use std::ops;
 
 use crate::{
     ast::Op,
-    interpreter::{errors::RuntimeError, Type, ValueResult},
+    interpreter::{errors::RuntimeError, RuntimeResult, Type, ValueResult},
 };
 
 use super::Value;
@@ -102,6 +102,32 @@ impl From<Value> for bool {
             Value::Number(n) => n != 0.0,
             Value::Bool(b) => b,
             Value::Null => false,
+        }
+    }
+}
+
+impl From<&Value> for RuntimeResult<f64> {
+    fn from(other: &Value) -> Self {
+        if let Value::Number(f) = other {
+            Ok(*f)
+        } else {
+            Err(RuntimeError::WrongType {
+                expected: Type::Number,
+                got: other.into(),
+            })
+        }
+    }
+}
+
+impl From<&Value> for RuntimeResult<String> {
+    fn from(other: &Value) -> Self {
+        if let Value::String(s) = other {
+            Ok(s.clone())
+        } else {
+            Err(RuntimeError::WrongType {
+                expected: Type::String,
+                got: other.into(),
+            })
         }
     }
 }

@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    ast::{Literal, Op, SpanExpr, SpanStmt, Stmt},
+    ast::{Literal, Op, SpanExpr, Stmt},
     interpreter::{value::Value, Type},
     lexer::types::Span,
     parser::Spanned,
@@ -19,11 +19,10 @@ use super::{
 };
 
 impl<'input> Interpreter<'_> {
-    pub fn visit_ident(&mut self, span: &Span, ident: &str) -> SpannedValueResult {
-        self.env.get_variable(ident).map_err(|e| Spanned {
-            span: *span,
-            node: e,
-        })
+    pub fn visit_ident(&mut self, span: Span, ident: &str) -> SpannedValueResult {
+        self.env
+            .get_variable(ident)
+            .map_err(|e| Spanned { span, node: e })
     }
 
     pub fn visit_literal(&mut self, lit: &Literal) -> Value {
@@ -39,26 +38,23 @@ impl<'input> Interpreter<'_> {
     pub fn visit_userinput(&mut self) -> Value {
         let mut input = String::new();
         io::stdin().read_line(&mut input).unwrap();
-        Value::String(input)
+        Value::String(input.trim().into())
     }
 
-    pub fn visit_unary_op(&mut self, span: &Span, op: Op, expr: &SpanExpr) -> SpannedValueResult {
+    pub fn visit_unary_op(&mut self, span: Span, op: &Op, expr: &SpanExpr) -> SpannedValueResult {
         let value = self.visit_expr(expr)?;
         match op {
             Op::Not => !value,
             Op::Minus => -value,
             _ => unreachable!(),
         }
-        .map_err(|e| Spanned {
-            span: *span,
-            node: e,
-        })
+        .map_err(|e| Spanned { span, node: e })
     }
 
     pub fn visit_binary_op(
         &mut self,
         span: Span,
-        op: Op,
+        op: &Op,
         lhs: &SpanExpr,
         rhs: &SpanExpr,
     ) -> SpannedValueResult {
@@ -81,7 +77,7 @@ impl<'input> Interpreter<'_> {
     pub fn visit_comparison(
         &mut self,
         span: Span,
-        op: Op,
+        op: &Op,
         lhs: &Value,
         rhs: &Value,
     ) -> SpannedValueResult {
@@ -106,7 +102,7 @@ impl<'input> Interpreter<'_> {
     pub fn visit_arithmetic_op(
         &mut self,
         span: Span,
-        op: Op,
+        op: &Op,
         lhs: Value,
         rhs: Value,
     ) -> SpannedValueResult {
@@ -122,7 +118,7 @@ impl<'input> Interpreter<'_> {
 
     pub fn visit_short_circuiting_op(
         &mut self,
-        op: Op,
+        op: &Op,
         lhs: Value,
         rhs: &SpanExpr,
     ) -> SpannedValueResult {
