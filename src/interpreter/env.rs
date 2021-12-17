@@ -32,6 +32,13 @@ impl Env {
 
     /// Insert `value` with a key of `ident` into the current scope
     pub fn set_variable(&mut self, ident: &str, value: &Value) {
+        for depth in 0..=self.depth {
+            if let Some(v) = self.scopes.get_mut(depth).unwrap().get_mut(ident) {
+                *v = value.clone();
+                return;
+            }
+        }
+
         self.scopes
             .get_mut(self.depth)
             .unwrap()

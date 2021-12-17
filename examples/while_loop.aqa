@@ -1,0 +1,13 @@
+OUTPUT "Please enter your name:"
+name <- USERINPUT
+
+OUTPUT "Please confirm your name:"
+confirmation <- USERINPUT
+
+WHILE confirmation != name
+    OUTPUT "Confirmation did not match, please confirm your name again:"
+    confirmation <- USERINPUT
+ENDWHILE
+
+OUTPUT ""
+OUTPUT "Name entry completed successfully"

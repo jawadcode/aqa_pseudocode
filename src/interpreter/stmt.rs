@@ -10,7 +10,7 @@ use crate::{
 
 use super::{
     value::{Subroutine, Value},
-    Interpreter, SpannedRuntimeResult,
+    Interpreter, SpannedRuntimeResult, SpannedValueResult,
 };
 
 impl<'input> Interpreter<'_> {
@@ -62,9 +62,7 @@ impl<'input> Interpreter<'_> {
         self.env.push_scope();
         let cond = self.visit_expr(cond)?;
         if cond.into() {
-            for stmt in body {
-                self.visit_stmt(stmt)?;
-            }
+            self.exec_stmts(body)?;
             self.env.pop_scope();
             return Ok(());
         }
@@ -75,9 +73,7 @@ impl<'input> Interpreter<'_> {
             self.env.push_scope();
             let cond = self.visit_expr(cond)?;
             if cond.into() {
-                for stmt in body {
-                    self.visit_stmt(stmt)?;
-                }
+                self.exec_stmts(body)?;
                 self.env.pop_scope();
                 return Ok(());
             }
@@ -86,9 +82,7 @@ impl<'input> Interpreter<'_> {
 
         if let Some(body) = else_ {
             self.env.push_scope();
-            for stmt in body {
-                self.visit_stmt(stmt)?;
-            }
+            self.exec_stmts(body)?;
             self.env.pop_scope();
         }
 
@@ -120,12 +114,45 @@ impl<'input> Interpreter<'_> {
         for i in start..=end {
             self.env.set_variable(counter, &Value::Number(i as f64));
             self.env.push_scope();
-            for stmt in body {
-                self.visit_stmt(stmt)?;
-            }
+            self.exec_stmts(body)?;
             self.env.pop_scope();
         }
 
+        Ok(())
+    }
+
+    pub fn visit_while_loop(
+        &mut self,
+        cond: &SpanExpr,
+        body: &[SpanStmt],
+    ) -> SpannedRuntimeResult<()> {
+        while self.visit_expr(cond)?.into() {
+            self.env.push_scope();
+            self.exec_stmts(body)?;
+            self.env.pop_scope();
+        }
+        Ok(())
+    }
+
+    pub fn visit_repeat_until(
+        &mut self,
+        body: &[SpanStmt],
+        until_cond: &SpanExpr,
+    ) -> SpannedRuntimeResult<()> {
+        loop {
+            self.env.push_scope();
+            self.exec_stmts(body)?;
+            self.env.pop_scope();
+            if self.visit_expr(until_cond)?.into() {
+                break Ok(());
+            }
+        }
+    }
+
+    fn exec_stmts(&mut self, stmts: &[SpanStmt]) -> SpannedRuntimeResult<()> {
+        for stmt in stmts {
+            self.visit_stmt(stmt)?;
+        }
         Ok(())
     }
 }

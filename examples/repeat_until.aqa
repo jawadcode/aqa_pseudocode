@@ -1,0 +1,11 @@
+OUTPUT "Please enter your new password:"
+password <- USERINPUT
+
+confirmation <- ""
+REPEAT
+    OUTPUT "Please confirm the password:"
+    confirmation <- USERINPUT
+UNTIL confirmation == password
+
+OUTPUT ""
+OUTPUT "Successfully reset password"

@@ -73,8 +73,8 @@ impl<'input> Visitor<SpannedValueResult, SpannedRuntimeResult<()>> for Interpret
                 else_ifs,
                 else_,
             } => self.visit_if_stmt(cond, body, else_ifs, else_),
-            Stmt::While { cond, body } => todo!(),
-            Stmt::RepeatUntil { body, until_cond } => todo!(),
+            Stmt::While { cond, body } => self.visit_while_loop(cond, body),
+            Stmt::RepeatUntil { body, until_cond } => self.visit_repeat_until(body, until_cond),
             Stmt::For {
                 counter,
                 range,
