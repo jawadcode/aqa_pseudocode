@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    ast::{Literal, Op, SpanExpr, Stmt},
+    ast::{BinOp, Literal, SpanExpr, Stmt},
     interpreter::{value::Value, Type},
     lexer::types::Span,
     parser::Spanned,
@@ -41,11 +41,16 @@ impl<'input> Interpreter<'_> {
         Value::String(input.trim().into())
     }
 
-    pub fn visit_unary_op(&mut self, span: Span, op: &Op, expr: &SpanExpr) -> SpannedValueResult {
+    pub fn visit_unary_op(
+        &mut self,
+        span: Span,
+        op: &BinOp,
+        expr: &SpanExpr,
+    ) -> SpannedValueResult {
         let value = self.visit_expr(expr)?;
         match op {
-            Op::Not => !value,
-            Op::Minus => -value,
+            BinOp::Not => !value,
+            BinOp::Minus => -value,
             _ => unreachable!(),
         }
         .map_err(|e| Spanned { span, node: e })
@@ -54,12 +59,12 @@ impl<'input> Interpreter<'_> {
     pub fn visit_binary_op(
         &mut self,
         span: Span,
-        op: &Op,
+        op: &BinOp,
         lhs: &SpanExpr,
         rhs: &SpanExpr,
     ) -> SpannedValueResult {
         let lhs = self.visit_expr(lhs)?;
-        use Op::*;
+        use BinOp::*;
         match op {
             LessThan | GreaterThan | LessOrEq | GreaterOrEq | Equals | NotEq => {
                 let rhs = self.visit_expr(rhs)?;
@@ -77,7 +82,7 @@ impl<'input> Interpreter<'_> {
     pub fn visit_comparison(
         &mut self,
         span: Span,
-        op: &Op,
+        op: &BinOp,
         lhs: &Value,
         rhs: &Value,
     ) -> SpannedValueResult {
@@ -89,7 +94,7 @@ impl<'input> Interpreter<'_> {
             },
         })?;
 
-        use Op::*;
+        use BinOp::*;
         Ok(Value::Bool(matches!(
             (op, ordering),
             (LessThan | LessOrEq, Ordering::Less)
@@ -102,15 +107,15 @@ impl<'input> Interpreter<'_> {
     pub fn visit_arithmetic_op(
         &mut self,
         span: Span,
-        op: &Op,
+        op: &BinOp,
         lhs: Value,
         rhs: Value,
     ) -> SpannedValueResult {
         match op {
-            Op::Add => lhs + rhs,
-            Op::Minus => lhs - rhs,
-            Op::Multiply => lhs * rhs,
-            Op::Divide => lhs / rhs,
+            BinOp::Add => lhs + rhs,
+            BinOp::Minus => lhs - rhs,
+            BinOp::Multiply => lhs * rhs,
+            BinOp::Divide => lhs / rhs,
             _ => unreachable!(),
         }
         .map_err(|e| Spanned { span, node: e })
@@ -118,15 +123,15 @@ impl<'input> Interpreter<'_> {
 
     pub fn visit_short_circuiting_op(
         &mut self,
-        op: &Op,
+        op: &BinOp,
         lhs: Value,
         rhs: &SpanExpr,
     ) -> SpannedValueResult {
         Ok(Value::Bool(match (op, bool::from(lhs)) {
-            (Op::And, false) => false,
-            (Op::And, true) => bool::from(self.visit_expr(rhs)?),
-            (Op::Or, true) => true,
-            (Op::Or, false) => bool::from(self.visit_expr(rhs)?),
+            (BinOp::And, false) => false,
+            (BinOp::And, true) => bool::from(self.visit_expr(rhs)?),
+            (BinOp::Or, true) => true,
+            (BinOp::Or, false) => bool::from(self.visit_expr(rhs)?),
             _ => unreachable!(),
         }))
     }

@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::{ast::Op, interpreter::Type};
+use crate::{ast::BinOp, interpreter::Type};
 
 use super::value::Value;
 
@@ -16,7 +16,7 @@ pub enum RuntimeError {
     CannotPerform {
         lhs: Type,
         rhs: Type,
-        op: Op,
+        op: BinOp,
     },
     CannotCompare {
         lhs: Type,

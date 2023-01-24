@@ -8,11 +8,11 @@ pub type RegNum = usize;
 pub type ConstIdx = usize;
 pub type Addr = usize;
 
-pub struct VM<'chunk> {
+pub struct VM {
     ip: usize,
     regs: Vec<Value>,
     stack: Vec<Value>,
-    chunk: &'chunk Chunk,
+    chunk: Chunk,
 }
 
 #[repr(u8)]
@@ -20,9 +20,7 @@ pub struct VM<'chunk> {
 pub enum Op {
     Push(ConstIdx),
     Pop,
-    Load(RegNum),
-    Move(RegNum),
-    MoveConst(RegNum, ConstIdx),
+    DefineGlobal(ConstIdx),
 
     Add,
     Sub,
@@ -36,6 +34,9 @@ pub enum Op {
     Eq,
     NotEq,
 
+    Not,
+    Neg,
+
     Jump(Addr),
     JumpTrue(Addr),
     JumpFalse(Addr),
@@ -47,6 +48,15 @@ pub enum Op {
 pub struct Chunk {
     pub consts: Vec<Value>,
     pub ops: Vec<Op>,
+}
+
+impl Default for Chunk {
+    fn default() -> Self {
+        Chunk {
+            consts: vec![],
+            ops: vec![],
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -91,16 +101,25 @@ macro_rules! binop_cmp {
     }};
 }
 
-impl<'chunk> VM<'chunk> {
-    pub fn new(chunk: &'chunk Chunk) -> Self {
+macro_rules! unop {
+    ($self:ident, $op:tt) => {{
+        let value = $self.pop();
+        $self.stack.push(($op value)?)
+    }};
+}
+
+impl Default for VM {
+    fn default() -> Self {
         Self {
             ip: 0,
             regs: vec![Value::Null; 256],
             stack: vec![],
-            chunk,
+            chunk: Default::default(),
         }
     }
+}
 
+impl VM {
     pub fn run(&mut self) -> VMResult<()> {
         while self.ip < self.chunk.ops.len() {
             match self.chunk.ops[self.ip].clone() {
@@ -108,9 +127,7 @@ impl<'chunk> VM<'chunk> {
                 Op::Pop => {
                     self.pop();
                 }
-                Op::Load(r) => self.stack.push(self.regs[r].clone()),
-                Op::Move(r) => self.regs[r] = self.pop(),
-                Op::MoveConst(r, c) => self.regs[r] = self.chunk.consts[c].clone(),
+                Op::DefineGlobal(c) => todo!(),
 
                 Op::Add => binop!(self, +),
                 Op::Sub => binop!(self, -),
@@ -123,6 +140,9 @@ impl<'chunk> VM<'chunk> {
                 Op::GreaterEq => binop_cmp!(self, >=),
                 Op::Eq => binop_cmp!(self, ==),
                 Op::NotEq => binop_cmp!(self, !=),
+
+                Op::Not => unop!(self, !),
+                Op::Neg => unop!(self, -),
 
                 Op::Jump(addr) => {
                     self.ip = addr;
@@ -157,65 +177,30 @@ impl<'chunk> VM<'chunk> {
 
 impl Display for Op {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Op::Push(_) => write!(f, "push"),
-            Op::Pop => write!(f, "pop"),
-            Op::Load(_) => write!(f, "pop"),
-            Op::Move(_) => write!(f, "move"),
-            Op::MoveConst(_, _) => write!(f, "store"),
-            Op::Add => write!(f, "+"),
-            Op::Sub => write!(f, "-"),
-            Op::Mul => write!(f, "*"),
-            Op::Div => write!(f, "/"),
-            Op::Less => write!(f, "<"),
-            Op::LessEq => write!(f, "<="),
-            Op::Greater => write!(f, ">"),
-            Op::GreaterEq => write!(f, ">="),
-            Op::Eq => write!(f, "=="),
-            Op::NotEq => write!(f, "!="),
-            Op::Jump(_) => write!(f, "jump"),
-            Op::JumpTrue(_) => write!(f, "jumpif"),
-            Op::JumpFalse(_) => write!(f, "jumpelse"),
-            Op::Print => write!(f, "print"),
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{value::Value, Chunk, Op, VM};
-
-    #[test]
-    fn basic_ops() {
-        let chunk = Chunk {
-            consts: vec![
-                Value::Number(0.0),
-                Value::Number(1.0),
-                Value::Number(10000.0),
-            ],
-            ops: vec![
-                // Loop
-                Op::MoveConst(0, 0),
-                Op::Load(0),
-                Op::Push(1),
-                Op::Add,
-                Op::Move(0),
-                // Print
-                Op::Load(0),
-                Op::Load(0),
-                Op::Mul,
-                Op::Print,
-                // Check
-                Op::Load(0),
-                Op::Push(1),
-                Op::Add,
-                Op::Push(2),
-                Op::LessEq,
-                Op::JumpTrue(1),
-            ],
-        };
-
-        let mut vm = VM::new(&chunk);
-        vm.run().unwrap_or_else(|err| eprintln!("{err}"));
+        write!(
+            f,
+            "{}",
+            match self {
+                Op::Push(_) => "PUSH",
+                Op::Pop => "POP",
+                Op::DefineGlobal(_) => "DEFINEGLOBAL",
+                Op::Add => "+",
+                Op::Sub => "-",
+                Op::Mul => "*",
+                Op::Div => "/",
+                Op::Less => "<",
+                Op::LessEq => "<=",
+                Op::Greater => ">",
+                Op::GreaterEq => ">=",
+                Op::Eq => "==",
+                Op::NotEq => "!=",
+                Op::Not => "!",
+                Op::Neg => "-",
+                Op::Jump(_) => "JUMP",
+                Op::JumpTrue(_) => "JUMPTRUE",
+                Op::JumpFalse(_) => "JUMPFALSE",
+                Op::Print => "PRINT",
+            }
+        )
     }
 }

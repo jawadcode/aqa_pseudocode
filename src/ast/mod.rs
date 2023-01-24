@@ -61,11 +61,11 @@ pub enum Expr {
     List(Vec<SpanExpr>),
     Userinput,
     UnaryOp {
-        op: Op,
+        op: BinOp,
         expr: Boxpr,
     },
     BinaryOp {
-        op: Op,
+        op: BinOp,
         lhs: Boxpr,
         rhs: Boxpr,
     },
@@ -92,7 +92,7 @@ pub enum Literal {
 /// A better way to encode all the operations in the language,
 /// as opposed to just using `TokenKind`s
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Op {
+pub enum BinOp {
     /* ARITHMETIC OPERATORS */
     Add,
     Minus,

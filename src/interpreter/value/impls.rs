@@ -1,7 +1,7 @@
 use std::ops;
 
 use crate::{
-    ast::Op,
+    ast::BinOp,
     interpreter::{errors::RuntimeError, RuntimeResult, Type, ValueResult},
 };
 
@@ -36,7 +36,7 @@ impl ops::Add for Value {
         match (self, &rhs) {
             (Value::Number(n1), Value::Number(n2)) => Ok(Value::Number(n1 + n2)),
             (Value::String(s1), Value::String(s2)) => Ok(Value::String(s1 + s2)),
-            (v1, v2) => cannot_perform!(&v1, v2, Op::Add),
+            (v1, v2) => cannot_perform!(&v1, v2, BinOp::Add),
         }
     }
 }
@@ -46,7 +46,7 @@ impl ops::Sub for Value {
     fn sub(self, rhs: Self) -> Self::Output {
         match (self, &rhs) {
             (Value::Number(n1), Value::Number(n2)) => Ok(Value::Number(n1 - n2)),
-            (v1, v2) => cannot_perform!(&v1, v2, Op::Minus),
+            (v1, v2) => cannot_perform!(&v1, v2, BinOp::Minus),
         }
     }
 }
@@ -57,7 +57,7 @@ impl ops::Mul for Value {
         match (self, &rhs) {
             (Value::Number(n1), Value::Number(n2)) => Ok(Value::Number(n1 * n2)),
             (Value::String(s), Value::Number(n)) => Ok(Value::String(s.repeat(*n as usize))),
-            (v1, v2) => cannot_perform!(&v1, v2, Op::Multiply),
+            (v1, v2) => cannot_perform!(&v1, v2, BinOp::Multiply),
         }
     }
 }
@@ -67,7 +67,7 @@ impl ops::Div for Value {
     fn div(self, rhs: Self) -> Self::Output {
         match (self, &rhs) {
             (Value::Number(n1), Value::Number(n2)) => Ok(Value::Number(n1 / n2)),
-            (v1, v2) => cannot_perform!(&v1, v2, Op::Divide),
+            (v1, v2) => cannot_perform!(&v1, v2, BinOp::Divide),
         }
     }
 }

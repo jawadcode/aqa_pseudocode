@@ -119,50 +119,50 @@ impl fmt::Display for Literal {
     }
 }
 
-impl From<TokenKind> for Op {
+impl From<TokenKind> for BinOp {
     fn from(other: TokenKind) -> Self {
         match other {
-            TokenKind::Add => Op::Add,
-            TokenKind::Minus => Op::Minus,
-            TokenKind::Multiply => Op::Multiply,
-            TokenKind::Divide => Op::Divide,
-            TokenKind::IntDiv => Op::IntDiv,
-            TokenKind::Modulus => Op::Modulus,
-            TokenKind::Equals => Op::Equals,
-            TokenKind::NotEq => Op::NotEq,
-            TokenKind::LessThan => Op::LessThan,
-            TokenKind::GreaterThan => Op::GreaterThan,
-            TokenKind::LessOrEq => Op::LessOrEq,
-            TokenKind::GreaterOrEq => Op::GreaterOrEq,
-            TokenKind::And => Op::And,
-            TokenKind::Or => Op::Or,
-            TokenKind::Not => Op::Not,
+            TokenKind::Add => BinOp::Add,
+            TokenKind::Minus => BinOp::Minus,
+            TokenKind::Multiply => BinOp::Multiply,
+            TokenKind::Divide => BinOp::Divide,
+            TokenKind::IntDiv => BinOp::IntDiv,
+            TokenKind::Modulus => BinOp::Modulus,
+            TokenKind::Equals => BinOp::Equals,
+            TokenKind::NotEq => BinOp::NotEq,
+            TokenKind::LessThan => BinOp::LessThan,
+            TokenKind::GreaterThan => BinOp::GreaterThan,
+            TokenKind::LessOrEq => BinOp::LessOrEq,
+            TokenKind::GreaterOrEq => BinOp::GreaterOrEq,
+            TokenKind::And => BinOp::And,
+            TokenKind::Or => BinOp::Or,
+            TokenKind::Not => BinOp::Not,
             _ => unreachable!(),
         }
     }
 }
 
-impl fmt::Display for Op {
+impl fmt::Display for BinOp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}",
             match self {
-                Op::Add => "+",
-                Op::Minus => "-",
-                Op::Multiply => "*",
-                Op::Divide => "/",
-                Op::IntDiv => "//",
-                Op::Modulus => "%",
-                Op::Equals => "==",
-                Op::NotEq => "!=",
-                Op::LessThan => "<",
-                Op::GreaterThan => ">",
-                Op::LessOrEq => "<=",
-                Op::GreaterOrEq => ">=",
-                Op::And => "and",
-                Op::Or => "or",
-                Op::Not => "not",
+                BinOp::Add => "+",
+                BinOp::Minus => "-",
+                BinOp::Multiply => "*",
+                BinOp::Divide => "/",
+                BinOp::IntDiv => "//",
+                BinOp::Modulus => "%",
+                BinOp::Equals => "==",
+                BinOp::NotEq => "!=",
+                BinOp::LessThan => "<",
+                BinOp::GreaterThan => ">",
+                BinOp::LessOrEq => "<=",
+                BinOp::GreaterOrEq => ">=",
+                BinOp::And => "and",
+                BinOp::Or => "or",
+                BinOp::Not => "not",
             }
         )
     }
